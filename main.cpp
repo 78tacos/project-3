@@ -5,7 +5,6 @@
 #include <cmath>
 #include <memory>
 #include <unordered_map>
-#include <algorithm>
 
 using namespace std;
 
@@ -38,24 +37,21 @@ public:
                 return node.get();
             }
         }
-        // Insert new word at the end of the linked list
+        // inserting new word at the end of the linked list
         nodes.emplace_back(make_unique<Node>(word, steps + 1));
         return nodes.back().get();
     }
 
-    // Collect words in the linked list for CSV output, sorted by occurrences
-    void collectWords(vector<Node>& wordStats) {
+    // collect words in the linked list for CSV output in insertion order
+    vector<Node> collectWords() const {
+        vector<Node> collectedWords;
         for (const auto& node : nodes) {
-            wordStats.push_back(*node);
+            collectedWords.push_back(*node);  // copying each node to collectedWords
         }
-        // Sort by occurrences in ascending order
-        sort(wordStats.begin(), wordStats.end(), [](const Node &a, const Node &b) {
-            return a.occurrences < b.occurrences;
-        });
+        return collectedWords;
     }
 };
 
-// HashTable class to store words and track steps and occurrences
 class HashTable {
 private:
     vector<LinkedList> table;
@@ -64,28 +60,28 @@ private:
 public:
     HashTable(int size) : table(size), tableSize(size) {}
 
-    // Insert or find a word in the hash table
+    // insert or find a word in the hash table
     void insert(const string& word) {
         int index = abs(HashCode(word) % tableSize);
-        int steps = 0; // Step counter for position in linked list
+        int steps = 0;
         table[index].findOrInsert(word, steps);
     }
 
-    // Collect all words in the hash table for output, ordered by slot and occurrences
-    void collectAllWords(vector<vector<Node>>& wordStatsBySlot) {
-        for (int i = 0; i < tableSize; ++i) {
-            vector<Node> wordStats;
-            table[i].collectWords(wordStats);
-            wordStatsBySlot.push_back(move(wordStats));  // Save sorted list for each slot
+    // collect all words in the hash table for output, preserving insertion order by slot
+    vector<vector<Node>> collectAllWords() const {
+        vector<vector<Node>> wordStatsBySlot;
+        for (const auto& list : table) {
+            wordStatsBySlot.push_back(list.collectWords()); 
         }
+        return wordStatsBySlot;
     }
 };
 
-// Main function to process the text file and hash table, and export to CSV
+//process the text file and hash table, and export to CSV
 class WordCounter {
 private:
     vector<int> tableSizes = {500, 1000, 2000, 5000, 10000};
-    const string filename = "LittleWomen.txt"; // Hardcoded filename, make sure it's in the same directory
+    const string filename = "LittleWomen.txt"; // make sure it's in the same directory
 
 public:
     void processFile() {
@@ -93,23 +89,20 @@ public:
             HashTable hashTable(size);
             ifstream file(filename);
 
-            // Check if the file opened successfully
+            // Because I sometimes mess this up
             if (!file.is_open()) {
                 throw runtime_error("Error: Could not open the file " + filename);
             }
 
             string word;
-            // Insert words from file into the hash table
+            // Putting into the hash table
             while (file >> word) {
                 hashTable.insert(word);
             }
             file.close();
 
-            // Collect words and their statistics, ordered by hash table slot
-            vector<vector<Node>> wordStatsBySlot;
-            hashTable.collectAllWords(wordStatsBySlot);
+            vector<vector<Node>> wordStatsBySlot = hashTable.collectAllWords();
 
-            // Output results to CSV
             writeCSV(size, wordStatsBySlot);
             cout << "Hash table of size " << size << " processed and saved to CSV.\n";
         }
@@ -120,7 +113,6 @@ public:
         ofstream outFile(csvFilename);
         outFile << "Word,Occurrences,Steps\n";
 
-        // Write each slot's words, sorted by occurrences
         for (const auto& slot : wordStatsBySlot) {
             for (const auto& node : slot) {
                 outFile << node.word << "," << node.occurrences << "," << node.totalSteps << "\n";
@@ -135,7 +127,7 @@ int main() {
     WordCounter counter;
     try {
         counter.processFile();
-    } catch (const runtime_error& e) { // In case file is not in the same directory
+    } catch (const runtime_error& e) { // In case file is not in the same directory lol
         cerr << e.what() << "\n";
         return 1;
     }
