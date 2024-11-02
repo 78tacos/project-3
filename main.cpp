@@ -118,7 +118,7 @@ public:
                 outFile << node.word << "," << node.occurrences << "," << node.totalSteps << "\n";
             }
         }
-        
+
         outFile.close();
     }
 };
