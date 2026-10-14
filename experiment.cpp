@@ -5,7 +5,7 @@
 #include <cmath>
 #include <memory>
 #include <unordered_map>
-#include <iomanip> // for std::setw in visualization
+#include <iomanip> // setw in visualizeCollisions
 
 using namespace std;
 
@@ -136,7 +136,7 @@ private:
 public:
     void processFile() {
         for (int size : tableSizes) {
-            HashTable hashTable(size, 5); // Set collision threshold to 5
+            HashTable hashTable(size, 5); // collision threshold
             ifstream file(filename);
 
             if (!file.is_open()) {
@@ -153,8 +153,7 @@ public:
 
             writeCSV(size, wordStatsBySlot);
             cout << "Hash table of size " << size << " processed and saved to CSV.\n";
-            
-            // Display the collision visualization
+
             hashTable.visualizeCollisions();
         }
     }
