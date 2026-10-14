@@ -37,16 +37,15 @@ public:
                 return node.get();
             }
         }
-        // inserting new word at the end of the linked list
         nodes.emplace_back(make_unique<Node>(word, steps + 1));
         return nodes.back().get();
     }
 
-    // collect words in the linked list for CSV output in insertion order
+    // CSV rows follow chain insertion order.
     vector<Node> collectWords() const {
         vector<Node> collectedWords;
         for (const auto& node : nodes) {
-            collectedWords.push_back(*node);  // copying each node to collectedWords
+            collectedWords.push_back(*node);
         }
         return collectedWords;
     }
@@ -60,14 +59,13 @@ private:
 public:
     HashTable(int size) : table(size), tableSize(size) {}
 
-    // insert or find a word in the hash table
     void insert(const string& word) {
         int index = abs(HashCode(word) % tableSize);
         int steps = 0;
         table[index].findOrInsert(word, steps);
     }
 
-    // collect all words in the hash table for output, preserving insertion order by slot
+    // One vector per bucket, in insertion order.
     vector<vector<Node>> collectAllWords() const {
         vector<vector<Node>> wordStatsBySlot;
         for (const auto& list : table) {
@@ -77,11 +75,10 @@ public:
     }
 };
 
-//process the text file and hash table, and export to CSV
 class WordCounter {
 private:
     vector<int> tableSizes = {500, 1000, 2000, 5000, 10000};
-    const string filename = "LittleWomen.txt"; // make sure it's in the same directory
+    const string filename = "LittleWomen.txt"; // working directory
 
 public:
     void processFile() {
@@ -89,13 +86,11 @@ public:
             HashTable hashTable(size);
             ifstream file(filename);
 
-            // Because I sometimes mess this up
             if (!file.is_open()) {
                 throw runtime_error("Error: Could not open the file " + filename);
             }
 
             string word;
-            // Putting into the hash table
             while (file >> word) {
                 hashTable.insert(word);
             }
@@ -127,7 +122,7 @@ int main() {
     WordCounter counter;
     try {
         counter.processFile();
-    } catch (const runtime_error& e) { // In case file is not in the same directory lol
+    } catch (const runtime_error& e) { // file missing or unreadable
         cerr << e.what() << "\n";
         return 1;
     }
